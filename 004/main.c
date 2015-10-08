@@ -11,7 +11,7 @@ char buf_fl[1024];
 char *str;
 char name[BUFSIZ];
 
-if (i==1){
+if (i<2){
   printf ("enter argument\n");
   return -1;
  }
