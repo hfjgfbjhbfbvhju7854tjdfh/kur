@@ -11,10 +11,13 @@ char buf_fl[1024];
 char *str;
 char name[BUFSIZ];
 
-
+if (i==1){
+  printf ("enter argument\n");
+  return -1;
+ }
 if (i>=3) {
-printf ("not correct argument \n"); 
-return -1;
+ printf ("not correct argument \n"); 
+ return -1;
 }
 
 pid = atoi (v[1]);

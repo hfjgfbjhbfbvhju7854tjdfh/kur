@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <unistd.h>
+
 
 void sigfunc (int sig) {
   if (sig != SIGINT) {
@@ -18,8 +20,15 @@ int main (void) {
 
  int i;
  char buf [256];
- char par [256];
+ char path [256];
+ 
  signal (SIGINT, sigfunc);
+
+path[0]=0;
+sprintf(path,"%s:%s",getenv("PATH"),getcwd(buf,256));
+setenv("PATH",path,1);
+
+
  printf ("### Shell ###\n");
 
 while (1) {
