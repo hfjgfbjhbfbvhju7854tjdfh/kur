@@ -22,10 +22,11 @@ int status;
 int status_addr;
 int i = 0;
 
-
 if (arg !=3) {
   printf ("Enter 2 arguments. N and n \n");
 }
+
+
 
   for (i=0; i<10; i++) {
       status = pthread_create( &tid, NULL, test, (void*) &it );

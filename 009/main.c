@@ -17,7 +17,17 @@ char buff_all [MAX];
 int i = 0;
 int n = 0;
 
-pip_w= popen (argv[1], "r");
+if (arg != 2) {
+  printf ("Enter one argument.\n");
+  printf ("Exemple: ls.\n");
+  return 0;
+} else if (arg > 2) {
+  printf ("Enter one arguments.\n");
+ printf ("Exemple: ls");
+  return 0;
+}
+
+pip_w= popen (argv[1], "r"); // argv[1]
 if (pip_w == NULL) { printf ("exit fl == NULL\n"); return 0;}
 
 while ( fgets (buff, MAX, pip_w ) ) { 
