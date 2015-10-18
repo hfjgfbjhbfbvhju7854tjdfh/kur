@@ -4,5 +4,5 @@
 
 ./udpchat  remoteport localportr
 
-Чат программа.
+Чат программа.   
 
