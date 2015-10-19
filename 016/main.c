@@ -27,8 +27,15 @@ char bjpg  [12000];
 
 int protocol_http (int sock_m, char bhtml[], char bjpg[]) {
     
+	#define text 1
+	#define img  2
 	char *tm;
+	char *p = NULL;
+	int *png = NULL;
         int i = 0;
+	int cmd = 0;
+        
+         png = (int*)  &bjpg[0];
      bytes_read = recv (sock_m, buf, 1024, 0);
      if (bytes_read <=0 ) {
         printf ("Wrong recv\n");
@@ -37,22 +44,51 @@ int protocol_http (int sock_m, char bhtml[], char bjpg[]) {
  	
  	for (i=0; i<256+ftxt_size; i++) ansv[i]=0;	
 	tm=ansv;
+ 	
+	p = strstr(buf, "text" ); if (p!=NULL) cmd = text;
+	p = strstr(buf, "image"); if (p!=NULL) cmd = img;
+	
+     switch (cmd) {
+	case text :
     	sprintf (tm, "HTTP/1.1 200 OK\r\n"
 	"Server: myServer\r\n"
-	"Content-Length: 160 \r\n"
+	"Content-Length: %ld \r\n"
 	"Connection: keep-alive\r\n"
 	"Content-Type:text/html; charset=UTF-8\r\n"
 	"Keep-Alive: timeout=5, max=97\r\n"
 	"\r\n"
 	"\r\n"
 	"%s"
-         , bhtml);
+	,ftxt_size+256
+        ,bhtml);
+        printf ("%s\n", buf);
+        printf ("%s\n", tm);
+        send (sock, tm, 256+ftxt_size , 0);
+	break;
 	
+	case img:
+    	sprintf (tm, "HTTP/1.1 200 OK\r\n"
+	"Server: myServer\r\n"
+	"Content-Length: %ld \r\n"
+	"Connection: keep-alive\r\n"
+	"Content-Type: image/png \r\n"
+	"Keep-Alive: timeout=5, max=97\r\n"
+	"\r\n"
+	"\r\n"
+	,fjpg_size+256);
+        printf ("%s\n", buf);
+        printf ("%s\n", tm);
+        send (sock, tm, 256, 0);
+	send (sock, bjpg, fjpg_size, 0);
+	break;
+
+	default :
+	break;
+    }
 	  
-      printf ("Server get:\n  %s\n", buf);
-      printf ("Server send\n %s\n", ansv);
-      send (sock, tm, 256+ftxt_size , 0);	
-      send (sock, bjpg, fjpg_size, 0);
+
+       	
+      //send (sock, bjpg, fjpg_size, 0);
    
 }
 
