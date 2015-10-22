@@ -24,18 +24,27 @@ FILE* fjpg;
 long ftxt_size;
 long fjpg_size;
 char bjpg  [12000];
+/*
+char *sumstr (char * t, char* str, int * cnt) {
+	int i= 0;
+	len = strlen (str);
+	for (i = 0; i<=len, i++) {
+		
+	}
+*/
 
 int protocol_http (int sock_m, char bhtml[], char bjpg[]) {
     
 	#define text 1
 	#define img  2
-	char *tm;
+	#define  err_404  3
+        char *tm;
 	char *p = NULL;
 	int *png = NULL;
         int i = 0;
 	int cmd = 0;
         
-         png = (int*)  &bjpg[0];
+     png = (int*)  &bjpg[0];
      bytes_read = recv (sock_m, buf, 1024, 0);
      if (bytes_read <=0 ) {
         printf ("Wrong recv\n");
@@ -45,11 +54,19 @@ int protocol_http (int sock_m, char bhtml[], char bjpg[]) {
  	for (i=0; i<256+ftxt_size; i++) ansv[i]=0;	
 	tm=ansv;
  	
-	p = strstr(buf, "text" ); if (p!=NULL) cmd = text;
-	p = strstr(buf, "image"); if (p!=NULL) cmd = img;
+	p = strstr(buf, "text" );
+	    if (p!=NULL){		
+		char *ee = strstr (buf , "index.html");
+		if (ee == NULL) cmd = err_404; 		
+		else if (ee != NULL) cmd = text;
+		}	
+	p = strstr(buf, "image"); 
+	    if (p!=NULL) cmd = img;
 	
      switch (cmd) {
+	
 	case text :
+	{
     	sprintf (tm, "HTTP/1.1 200 OK\r\n"
 	"Server: myServer\r\n"
 	"Content-Length: %ld \r\n"
@@ -63,24 +80,69 @@ int protocol_http (int sock_m, char bhtml[], char bjpg[]) {
         ,bhtml);
         printf ("%s\n", buf);
         printf ("%s\n", tm);
-        send (sock, tm, 256+ftxt_size , 0);
+        send (sock, tm,256+ftxt_size , 0);
+	}
 	break;
 	
 	case img:
-    	sprintf (tm, "HTTP/1.1 200 OK\r\n"
-	"Server: myServer\r\n"
-	"Content-Length: %ld \r\n"
-	"Connection: keep-alive\r\n"
-	"Content-Type: image/png \r\n"
-	"Keep-Alive: timeout=5, max=97\r\n"
-	"\r\n"
-	"\r\n"
-	,fjpg_size+256);
-        printf ("%s\n", buf);
-        printf ("%s\n", tm);
-        send (sock, tm, 256, 0);
-	send (sock, bjpg, fjpg_size, 0);
+	{
+	char tmm [340000];	
+	char head[512]; //= &tmm[0];
+	char* tmj = &head[0]; 
+	int len = 0;
+    	tmj = stpcpy (tmj, "HTTP/1.1 200 OK\r\n");
+	tmj = stpcpy (tmj, "Server: myServer\r\n");
+ 	tmj = stpcpy (tmj,  "Connection: keep-alive\r\n");
+        tmj = stpcpy (tmj, "Content-Type: image/png \r\n");
+        tmj = stpcpy (tmj, "Keep-Alive: timeout=5, max=97\r\n\r\n");
+
+	len += strlen ("HTTP/1.1 200 OK\r\n");
+	len += strlen ("Server: myServer\r\n");
+	len += strlen ("Connection: keep-alive\r\n");
+	len += strlen ("Content-Type: image/png \r\n");
+	len += strlen ("Keep-Alive: timeout=5, max=97\r\n\r\n");
+	
+	fread (tmm ,fjpg_size, 1,fjpg);
+	send (sock, head, len, 0);	
+	send (sock, tmm, fjpg_size, 0);	
+       
+	printf ("%s\n", buf);
+	printf ("%s\n", head);
+	printf ("len=%d\n", len);	
+	printf ("png = %lu\n", fjpg_size);
+	}
 	break;
+	
+	case err_404 :{
+	char head[512]; 
+	char txt [512];
+	char* tmj = &head[0]; 
+	int len = 0;
+	FILE *e404;
+	e404 = fopen ("404.html", "r");
+    	tmj = stpcpy (tmj, "HTTP/1.1 200 OK\r\n");
+	tmj = stpcpy (tmj, "Server: myServer\r\n");
+ 	tmj = stpcpy (tmj,  "Connection: keep-alive\r\n");
+        tmj = stpcpy (tmj, "Content-Type: text/html \r\n");
+        tmj = stpcpy (tmj, "Keep-Alive: timeout=5, max=97\r\n\r\n");
+
+	len += strlen ("HTTP/1.1 200 OK\r\n");
+	len += strlen ("Server: myServer\r\n");
+	len += strlen ("Connection: keep-alive\r\n");
+	len += strlen ("Content-Type: text/html \r\n");
+	len += strlen ("Keep-Alive: timeout=5, max=97\r\n\r\n");
+
+	send (sock, head, len, 0);	
+	fread (txt, 190, 1, e404);
+	send (sock, txt, 190, 0);
+	
+	printf ("%s", buf);
+	printf ("%s\n", head);
+	printf ("%s\n", txt);
+	}
+	break;
+
+
 
 	default :
 	break;
@@ -117,14 +179,15 @@ port = atoi (argv[1]);
 //-------------------------------
 ftxt = fopen ("index.html", "r");
 if (ftxt == NULL){ printf ("read index.html\n");  exit (1);}
-fjpg = fopen ("foto.jpeg", "rb");
-if (fjpg == NULL){ printf ("no read foto,jpg"); exit(1); }
+fjpg = fopen ("linux.png", "rb");
+if (fjpg == NULL){ printf ("no read foto,jpg\n"); exit(1); }
 
 
 fpos_t l;
 fpos_t ll;
 fpos_t* pos_start = &l;
 fpos_t* pos_jp = &ll; 
+long tt;
 
 fgetpos (ftxt, pos_start);
 fseek (ftxt, 0, SEEK_END);
@@ -137,15 +200,16 @@ fseek (fjpg, 0, SEEK_END);
 fjpg_size = ftell (fjpg); 
 fsetpos (fjpg, pos_jp);
 
-long tt = ftxt_size;
 //printf ("%ld  %ld\n", ftxt_size, fjpg_size);
-
+/*
 tt=fjpg_size;
-if (fread (bjpg, sizeof(char), tt, fjpg) == 0 ) {
+if (fread (bjpg, tt, 1, fjpg) == 0 ) {
 	printf ("Wrong read files: foto.jpg\n");
 	exit (1);
 }
+*/
 
+tt = ftxt_size;
 //printf ("%ld  %ld\n", ftxt_size, fjpg_size);
 
 if (fread (bhtml, sizeof(char), tt, ftxt) == 0) {
@@ -197,5 +261,8 @@ fclose (fjpg);
 return 0;
 }
 
+
+/*
+*/
 
 
