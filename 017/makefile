@@ -1,6 +1,6 @@
 
 all: main.c
-	gcc main.c -o mlone -lpthread
+	gcc main.c -o mclone -lpthread
 
 clean: 
 	rm -rf mclone *.o *~
