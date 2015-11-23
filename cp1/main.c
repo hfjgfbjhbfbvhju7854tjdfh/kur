@@ -16,9 +16,7 @@ cnt++;
 
 void sig_fn (int sig) {
 
-openlog ("test", LOG_PID, LOG_USER);
 syslog (LOG_INFO, "Sig = %d", cnt);
-closelog ();
 exit(0);
 
 }
@@ -48,9 +46,7 @@ close (STDIN_FILENO);
 close (STDOUT_FILENO);
 close (STDERR_FILENO);
 
-openlog ("test", LOG_PID, LOG_USER);
 syslog (LOG_INFO, "Prog is load");
-closelog ();
 
 
 while (1) {
