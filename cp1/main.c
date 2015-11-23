@@ -1,10 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <syslog.h>
-
+#include <stdio.h>
+#include <stdlib.h> 
 
 const char *srt;
 int cnt;
@@ -16,10 +15,12 @@ cnt++;
 }
 
 void sig_fn (int sig) {
-openlog ("log", LOG_PID, LOG_USER);
+
+openlog ("test", LOG_PID, LOG_USER);
 syslog (LOG_INFO, "Sig = %d", cnt);
 closelog ();
 exit(0);
+
 }
 
 
@@ -28,11 +29,6 @@ int main (int arg, char * argc[]) {
 
 int status;
 int pid;
-
-//if (arg != 2) {
-//	printf ("Enter: file.log\n");
-//	return -1;
-//}
 
 
 pid = fork ();
