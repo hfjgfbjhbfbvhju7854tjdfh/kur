@@ -3,15 +3,18 @@
 #include <linux/kernel.h>
 #include <linux/types.h>
 #include <linux/cdev.h>
+#include <linux/slab.h>
 
 #define NIITM_NAME "niitm hello"  
 #define P_SIZE 64
 
-//struct module *c_owner;
-static char *ptr;
+//struct module *c_owner;  
+static char *data;
 
 
-ssize_t c_read (struct file *name_f, char __user *user, size_t d, loff_t *lof){
+ssize_t c_read (struct file *name_f, char __user *user, size_t lbuf, loff_t *lof){
+  
+  //int nbytes = lbuf - copy_to_user ();
    printk (KERN_INFO "Func c_read: %s\n", NIITM_NAME); 
    return 0;
 }
@@ -47,14 +50,15 @@ int init__ (void)
    my_cdev = cdev_alloc ();
    cdev_init(my_cdev, &chardev_fops);
    cdev_add (my_cdev, first_node, 1);
-   ptr =  kmalloc (P_SIZE, GFP_KERNEL);
-   if (!ptr) printk (KERN_INFO "Error in init__: %s\n", NIITM_NAME); 
+   data =  kmalloc (P_SIZE, GFP_KERNEL);
+   if (data == NULL) printk (KERN_INFO "Error in init__: %s\n", NIITM_NAME); 
    printk (KERN_INFO "loaded: %s\n", NIITM_NAME);
    return 0;
 }
 
 void exit__ (void) 
 {
+  kfree (data);
   printk (KERN_INFO "Unloaded %s\n", NIITM_NAME);
 }
 
