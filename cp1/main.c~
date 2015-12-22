@@ -1,0 +1,134 @@
+#include <signal.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <syslog.h>
+#include <stdio.h>
+#include <stdlib.h> 
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <pthread.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <error.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <string.h>
+
+//---------global val ------------------
+#define BUF_SIZE 256
+
+
+typedef struct pap
+{
+int sock;
+struct sockaddr_in* to_me;
+struct sockaddr_in* to_other;
+}P_t;
+
+P_t pa;
+
+const char *srt;
+int cnt;
+
+struct sockaddr_in to_me;
+struct sockaddr_in to_other;
+
+//-------------------------------------
+
+void sig_cnt (int sig) {
+cnt++;
+
+}
+
+void sig_fn (int sig) {
+
+syslog (LOG_INFO, "Sig = %d", cnt);
+exit(0);
+
+}
+
+
+
+int main (int arg, char * argc[]) {
+
+int status;
+int pid;
+int s;
+
+
+pid = fork ();
+
+if (pid == -1) {
+printf ("Faled fork\n");
+}
+
+if (!pid) {
+
+setsid ();
+//signal (SIGTERM, sig_fn);  //cntr+c  15
+signal (SIGUSR1, sig_fn);  //  10
+signal (SIGUSR2, sig_cnt);  //  12
+
+close (STDIN_FILENO);
+close (STDOUT_FILENO);
+close (STDERR_FILENO);
+
+syslog (LOG_INFO, "Prog is load");
+
+//---- creat udp socket  -----------------------
+
+int in_port = 33000;
+int out_port =34000;
+ 
+//create a UDP socket
+if ((s=socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+    syslog (LOG_INFO, "Soket is wrong\n");
+    exit(1);    
+}
+
+// zero  the structure
+memset((char *) &to_me, 0, sizeof(to_me));
+    to_me.sin_family = AF_INET;
+    to_me.sin_addr.s_addr = htonl(INADDR_ANY);
+    to_me.sin_port = htons(in_port);
+
+// zero  the structure
+memset((char *) &to_other, 0, sizeof(to_other));
+    to_other.sin_family = AF_INET;
+    to_other.sin_addr.s_addr = htonl(INADDR_ANY);
+    to_other.sin_port = htons(out_port);
+
+//bind socket to port
+if( bind(s , (struct sockaddr*)&to_me, sizeof(to_me) ) == -1) {
+    syslog( LOG_INFO, "Bind is wrong\n"); exit (1);
+ }
+
+ struct sockaddr_in faddr;
+ socklen_t len;
+ int nb;
+ char bf[BUF_SIZE];
+ len =  sizeof (faddr);
+
+while (1) {
+      nb=recvfrom(pa.sock, bf, BUF_SIZE, 0 , (struct sockaddr*)&faddr, &len);
+      if (nb <=0) {
+	syslog( LOG_INFO, "Dont resive socket\n"); 
+	break;}
+	bf[nb]=0;
+	len = strlen (bf);
+      nb =sendto( pa.sock, bf, len, 0, (struct sockaddr*)(pa.to_other), sizeof( struct sockaddr_in));
+	if (nb<=0){
+	syslog( LOG_INFO, "Dont send socket\n"); 
+	 break;}
+}
+
+return 1;
+
+} else  {
+  return 0;  //perenc dead
+}
+
+return 0;
+}

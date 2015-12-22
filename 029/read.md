@@ -1,1 +1,0 @@
-make -C ~/all_lesson/KERNEL/linux-4.3/ M=/home/study/git_hub/kur/029 modules

@@ -1,0 +1,6 @@
+
+all:
+	make -C ~/all_lesson/KERNEL/linux-4.3/ M=/home/study/git_hub/kur/cp2 modules
+
+clean :
+	make -C ~/all_lesson/KERNEL/linux-4.3/ M=/home/study/git_hub/kur/cp2 clean

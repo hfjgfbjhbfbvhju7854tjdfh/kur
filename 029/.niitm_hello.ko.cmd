@@ -1,1 +1,0 @@
-cmd_/home/study/git_hub/kur/029/niitm_hello.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/study/git_hub/kur/029/niitm_hello.ko /home/study/git_hub/kur/029/niitm_hello.o /home/study/git_hub/kur/029/niitm_hello.mod.o
